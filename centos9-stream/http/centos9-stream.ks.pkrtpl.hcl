@@ -4,11 +4,11 @@ firewall --enabled --service=ssh
 firstboot --disable
 ignoredisk --only-use=vda
 lang en_US.UTF-8
-keyboard us
+keyboard --xlayouts='ch(fr)'
 network --device eth0 --bootproto=dhcp
 firewall --enabled --service=ssh
-selinux --enforcing
-timezone UTC --isUtc
+selinux --disabled
+timezone Europe/Zurich --utc
 bootloader --location=mbr --driveorder="vda" --timeout=1
 rootpw --plaintext password
 
@@ -20,10 +20,22 @@ zerombr
 clearpart --all --initlabel
 part / --size=1 --grow --asprimary --fstype=ext4
 
+user --name=admin --groups=wheel --iscrypted --password=$6$z9iHyBD7MTgyUicn$kwrWplC3xM29JNoNWD9WVSuo3JR/wLZ4Ksi0FMIpmEN/a/rB/lZYuIr.ecdbq4pXLLXBqRRNrH5CbsX0/RcVU1
+
 %post --erroronfail
 # workaround anaconda requirements and clear root password
 passwd -d root
 passwd -l root
+
+#---- Install our SSH key ----
+mkdir -m0700 /home/admin/.ssh/
+
+cat <<EOF >/home/admin/.ssh/authorized_keys
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILarrmNyrYIAOc2EWvwyZor+CMlTGGChYwwwfRXCFLyH cyril@scorpius-cl-01
+EOF
+
+chmod 0600 /home/admin/.ssh/authorized_keys
+chown -R admin:admin /home/admin/.ssh/
 
 # Clean up install config not applicable to deployed environments.
 for f in resolv.conf fstab; do
